@@ -1,24 +1,13 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 
 import { Suspense, useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Plus,
-  Trash2,
-  ExternalLink,
-  Copy,
-  Check,
-  Loader2,
-  Inbox
-} from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { Loader2 } from "lucide-react";
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+/* ---------------- TYPES ---------------- */
 
 interface User {
   id: string;
@@ -46,6 +35,8 @@ function DashboardContent() {
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /* ---------------- FETCH BOOKMARKS ---------------- */
+
   const fetchBookmarks = async (userId: string) => {
     const { data } = await supabase
       .from("bookmarks")
@@ -55,6 +46,8 @@ function DashboardContent() {
 
     if (data) setBookmarks(data as BookmarkItem[]);
   };
+
+  /* ---------------- INIT ---------------- */
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -71,6 +64,7 @@ function DashboardContent() {
       await fetchBookmarks(data.user.id);
       setLoading(false);
 
+      // Realtime subscription
       channel = supabase
         .channel("bookmarks-changes")
         .on(
@@ -95,11 +89,13 @@ function DashboardContent() {
     };
   }, [router]);
 
+  /* ---------------- ADD BOOKMARK ---------------- */
+
   const addBookmark = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !url || !user) return;
 
-    let finalUrl = url.startsWith("http") ? url : `https://${url}`;
+    const finalUrl = url.startsWith("http") ? url : `https://${url}`;
 
     await supabase.from("bookmarks").insert({
       title,
@@ -111,6 +107,8 @@ function DashboardContent() {
     setUrl("");
   };
 
+  /* ---------------- DELETE BOOKMARK ---------------- */
+
   const deleteBookmark = async (id: string) => {
     if (!user) return;
 
@@ -121,12 +119,17 @@ function DashboardContent() {
       .eq("user_id", user.id);
   };
 
+  /* ---------------- FILTER ---------------- */
+
   const filteredBookmarks = useMemo(() => {
-    return bookmarks.filter(bm =>
-      bm.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bm.url.toLowerCase().includes(searchQuery.toLowerCase())
+    return bookmarks.filter(
+      (bm) =>
+        bm.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        bm.url.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [bookmarks, searchQuery]);
+
+  /* ---------------- LOADING ---------------- */
 
   if (loading) {
     return (
@@ -135,6 +138,8 @@ function DashboardContent() {
       </div>
     );
   }
+
+  /* ---------------- UI ---------------- */
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12 text-white">
@@ -148,6 +153,7 @@ function DashboardContent() {
           className="w-full p-3 rounded-xl bg-gray-800 outline-none"
           required
         />
+
         <input
           placeholder="URL"
           value={url}
@@ -155,6 +161,7 @@ function DashboardContent() {
           className="w-full p-3 rounded-xl bg-gray-800 outline-none"
           required
         />
+
         <button className="bg-blue-600 px-6 py-2 rounded-xl">
           Add Bookmark
         </button>
@@ -177,6 +184,7 @@ function DashboardContent() {
               >
                 {bm.title}
               </a>
+
               <button
                 onClick={() => deleteBookmark(bm.id)}
                 className="text-red-400"
