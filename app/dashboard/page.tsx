@@ -73,7 +73,7 @@ function BookmarkCard({
         <div className="relative h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/5 ring-1 ring-white/10">
           {!imgError ? (
             <img
-              src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+              src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
               alt=""
               className="h-5 w-5 object-contain"
               onError={() => setImgError(true)}
